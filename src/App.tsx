@@ -1,26 +1,45 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { createContext } from 'react';
+import { Container } from 'react-bootstrap';
+import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { useApiWithSuspense } from './common/apiClient';
+import DetailView from './DetailView';
+import { ITodo } from './interfaces/ITodo';
+import ListView from './ListView';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+/**
+ * App context
+ * @type {React.Context<{data: ITodo[]}>}
+ */
+export const AppContext = createContext<{ data: ITodo[] }>({
+	data: [],
+});
+
+/**
+ * Main App
+ * @return {JSX.Element}
+ * @constructor
+ */
+const App: React.FC = () => {
+	// contextual data
+	const { data } = useApiWithSuspense<ITodo[]>({
+		url: '/todos',
+		method: 'GET',
+		// for demo purposes, lets just assume we are authenticated  and our `userId` is 1
+		params: {
+			userId: 1
+		}
+	});
+	
+	return (
+			<AppContext.Provider value={{ data }}>
+				<Container className="py-5">
+					<Router>
+						<Route exact path='/:id' component={DetailView} />
+						<Route exact path="/" component={ListView} />
+					</Router>
+				</Container>
+			</AppContext.Provider>
+	);
+};
 
 export default App;
